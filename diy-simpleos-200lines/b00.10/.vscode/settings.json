@@ -1,0 +1,22 @@
+{
+    "cmake.configureOnOpen": false,
+    "cmake.sourceDirectory": "${workspaceFolder}/.",
+    "C_Cpp.errorSquiggles": "Disabled",
+    "files.associations": {
+        "dirent.h": "c",
+        "lib_syscall.h": "c",
+        "task.h": "c",
+        "types.h": "c",
+        "fcntl.h": "c",
+        "_default_fcntl.h": "c",
+        "stdint.h": "c",
+        "stdint-gcc.h": "c"
+    },
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "d:\\DIY_OS\\Project\\diy-simpleos-200lines\\b00.10",
+            "binaryPath": "d:\\DIY_OS\\Project\\diy-simpleos-200lines\\b00.10\\os.elf",
+            "binaryArgs": []
+        }
+    ],
+}
