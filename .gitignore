@@ -1,0 +1,5 @@
+*.img
+*.txt
+*.bin
+*.elf
+*.o
