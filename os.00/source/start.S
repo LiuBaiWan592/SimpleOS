@@ -38,12 +38,38 @@ read_self_all:
 	int $0x13
 	jc read_self_all
 	
-	jmp .
+	// 进入保护模式
+	cli						// 关中断
+	lgdt [gdt_desc]			// 加载全局描述表(GDT)
+	mov $0x1, %eax
+	lmsw %ax				// CR0寄存器最低位PE位置1 打开保护模式
+	jmp $KERNEL_CODE_SEG, $_start_32	// CS寄存器置为8 CS指向GDT内核代码段 跳转到32位指令处运行
 
-	.org 0x1fe			// 510
+	.org 0x1fe				// 510
 	.byte 0x55, 0xaa		// unsigned char s[] = {0x55, 0xaa}
+
+
+	// 指定以下的代码生成32位的机器指令 在保护模式下运行
+	.code32
+	// 以下是代码区
+	.text
 
 _start_32:
 	// _start_32 为0x7e00	
 	// 磁盘读写测试
-	.fill 64*1024, 1, 0x35
+	//.fill 64*1024, 1, 0x35
+	
+	// 重新设置段寄存器和栈空间
+	mov $KERNEL_DATA_SEG, %ax
+	mov %ax, %ds
+	mov %ax, %es
+	mov %ax, %ss
+	mov %ax, %gs
+	mov %ax, %fs
+	mov $_start, %esp
+	
+	jmp .
+
+gdt_desc:
+	.word (256 * 8) - 1		//GDT界限 		word:16bit
+	.long gdt_table			//GDT起始地址	long:32bit
