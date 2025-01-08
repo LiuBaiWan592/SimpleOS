@@ -18,3 +18,6 @@
  	.text
 _start: 
 	jmp .
+
+	.org 0x1fe			// 510
+	.byte 0x55, 0xaa		// unsigned char s[] = {0x55, 0xaa}
