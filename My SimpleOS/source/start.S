@@ -67,7 +67,17 @@ _start_32:
 	mov %ax, %gs
 	mov %ax, %fs
 	mov $_start, %esp
-	
+
+	// 打开分页机制
+	mov $pg_dir, %eax		// 配置CR3寄存器
+	mov %eax, %cr3
+	mov %cr4, %eax			// 配置CR4寄存器
+	orl $(1 << 4), %eax
+	mov %eax, %cr4
+	mov %cr0, %eax			// 配置CR0寄存器
+	orl $(1 << 31), %eax
+	mov %eax, %cr0
+
 	jmp .
 
 gdt_desc:

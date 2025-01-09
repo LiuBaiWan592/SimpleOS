@@ -12,6 +12,15 @@ typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 
+#define PDE_P (1 << 0)
+#define PDE_W (1 << 1)
+#define PDE_U (1 << 2)
+#define PDE_PS (1 << 7)
+
+// 页目录表 4KB对齐
+uint32_t pg_dir[1024] __attribute__((aligned(4096))) = {
+    [0] = (0) | PDE_P | PDE_W | PDE_U | PDE_PS,};
+
 // 全局描述表（GDT）初始化配置
 struct
 {
