@@ -11,6 +11,9 @@
 	// 声明本地以下符号是全局的，在其它源文件中可以访问
 	.global _start
 
+	// 声明外部外部定义
+	.extern os_init
+
 	// 指定以下的代码生成16位的机器指令 这样才能在启动时的实模式下运行
   	.code16
 
@@ -67,6 +70,9 @@ _start_32:
 	mov %ax, %gs
 	mov %ax, %fs
 	mov $_start, %esp
+
+	// 调用os.c中的页表初始化
+	call os_init
 
 	// 打开分页机制
 	mov $pg_dir, %eax		// 配置CR3寄存器
