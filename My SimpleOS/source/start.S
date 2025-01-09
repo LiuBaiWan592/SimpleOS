@@ -44,6 +44,7 @@ read_self_all:
 	// 进入保护模式
 	cli						// 关中断
 	lgdt [gdt_desc]			// 加载全局描述表(GDT)
+	lidt [idt_desc]			// 加载中断描述表(IDT)
 	mov $0x1, %eax
 	lmsw %ax				// CR0寄存器最低位PE位置1 打开保护模式
 	jmp $KERNEL_CODE_SEG, $_start_32	// CS寄存器置为8 CS指向GDT内核代码段 跳转到32位指令处运行
@@ -86,6 +87,12 @@ _start_32:
 
 	jmp .
 
+// 配置全局描述表寄存器(GDTR)
 gdt_desc:
 	.word (256 * 8) - 1		// GDT界限 		word:16bit
 	.long gdt_table			// GDT起始地址	long:32bit
+
+// 配置中断描述表寄存器(IDTR)
+idt_desc:
+	.word (256 * 8) - 1		// IDT界限 		word:16bit
+	.long idt_table			// IDT起始地址	long:32bit
