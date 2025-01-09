@@ -58,6 +58,9 @@ void outb(uint8_t data, uint16_t port)
     __asm__ __volatile__("outb %[v], %[p]" ::[p] "d"(port), [v] "a"(data));
 }
 
+// 时钟中断处理函数声明
+void timer_int(void);
+
 void os_init(void)
 {
     // 初始化8259芯片配置

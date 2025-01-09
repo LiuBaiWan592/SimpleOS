@@ -9,7 +9,7 @@
 	#include "os.h"
 
 	// 声明本地以下符号是全局的，在其它源文件中可以访问
-	.global _start
+	.global _start, timer_int
 
 	// 声明外部外部定义
 	.extern os_init
@@ -85,7 +85,22 @@ _start_32:
 	orl $(1 << 31), %eax
 	mov %eax, %cr0
 
+	sti			// 开中断
+
 	jmp .
+
+// 时钟中断处理函数
+timer_int:
+	push %ds			// 中断处理前保护现场 将寄存器值压栈
+	pusha				// Push AX, CX, DX, BX, original SP, BP, SI, and DI.
+
+	mov $0x20, %al		// 向主片发送0x20表示中断处理完成
+	outb %al, $0x20		// outb %al, %dx
+
+	popa				// 中断处理后恢复现场 将寄存器值弹出
+	pop %ds				// 根据栈的数据结构 先进后出 后进先出
+	iret				// 中断返回
+
 
 // 配置全局描述表寄存器(GDTR)
 gdt_desc:
