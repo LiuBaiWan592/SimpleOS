@@ -45,6 +45,12 @@ struct
     [KERNEL_DATA_SEG / 8] = {0xFFFF, 0x0000, 0x9200, 0x00CF},
 };
 
+// 中断描述表（IDT）初始化配置
+struct
+{
+    uint16_t offset_l, selector, attr, offset_h;
+} idt_table[256] __attribute__((aligned(8)));
+
 // 封装outb指令:往某一端口写一字节数据
 void outb(uint8_t data, uint16_t port)
 {
@@ -71,6 +77,12 @@ void os_init(void)
     outb(0x36, 0x43);         // 选择定时器通道0，工作在模式3，周期性产生中断
     outb((uint8_t)tmo, 0x40); // 写入低八位到定时器
     outb(tmo >> 8, 0x40);     // 写入高八位到定时器
+
+    // 配置IDT表项，时钟中断对应表项为0x20，使其指向对应的时钟中断处理函数timer_int
+    idt_table[0x20].offset_l = (uint32_t)timer_int & 0xFFFF; // 配置低16位的偏移
+    idt_table[0x20].offset_h = (uint32_t)timer_int >> 16;    // 配置高16位的偏移
+    idt_table[0x20].selector = KERNEL_CODE_SEG;              // 配置选择子为内核代码段
+    idt_table[0x20].attr = 0x8E00;                           // 采用中断门（Interrupt Gate）配置 1000 1110
 
     // 将虚拟地址0x80000000映射到map_phy_buffer所在地址空间
     // 配置页目录表的MAP_ADDR的高十位表项指向已经初始化的页表page_table
