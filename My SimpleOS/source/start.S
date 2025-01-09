@@ -81,5 +81,5 @@ _start_32:
 	jmp .
 
 gdt_desc:
-	.word (256 * 8) - 1		//GDT界限 		word:16bit
-	.long gdt_table			//GDT起始地址	long:32bit
+	.word (256 * 8) - 1		// GDT界限 		word:16bit
+	.long gdt_table			// GDT起始地址	long:32bit
