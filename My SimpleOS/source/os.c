@@ -45,6 +45,13 @@ struct
     [KERNEL_DATA_SEG / 8] = {0xFFFF, 0x0000, 0x9200, 0x00CF},
 };
 
+// 封装outb指令:往某一端口写一字节数据
+void outb(uint8_t data, uint16_t port)
+{
+    // outb %al, %dx
+    __asm__ __volatile__("outb %[v], %[p]" ::[p] "d"(port), [v] "a"(data));
+}
+
 void os_init(void)
 {
     // 将虚拟地址0x80000000映射到map_phy_buffer所在地址空间
