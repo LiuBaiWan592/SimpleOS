@@ -43,7 +43,16 @@ struct
     // 内核数据（DATA）段配置：基地址（Base Address）全0，粒度（G granularity）设置为4KB，段界限（Segment Limit）全1 4KB * 2^20 = 4GB地址空间
     // D/B（Default operation size）为32位段(32-bit segment)，Segment present，the most privileged level，code or data，Read/Write
     [KERNEL_DATA_SEG / 8] = {0xFFFF, 0x0000, 0x9200, 0x00CF},
+    // 应用代码（CODE）段配置：基地址（Base Address）全0，粒度（G granularity）设置为4KB，段界限（Segment Limit）全1 4KB * 2^20 = 4GB地址空间
+    // D/B（Default operation size）为32位段(32-bit segment)，Segment present，3 privilege level，code or data，Execute/Read
+    [APP_CODE_SEG / 8] = {0xFFFF, 0x0000, 0xFA00, 0x00CF},
+    // 内核数据（DATA）段配置：基地址（Base Address）全0，粒度（G granularity）设置为4KB，段界限（Segment Limit）全1 4KB * 2^20 = 4GB地址空间
+    // D/B（Default operation size）为32位段(32-bit segment)，Segment present，3 privilege level，code or data，Read/Write, accessed
+    [APP_DATA_SEG / 8] = {0xFFFF, 0x0000, 0xF300, 0x00CF},
 };
+
+// task0的栈空间
+uint32_t task0_dpl3_stack[1024];
 
 // 中断描述表（IDT）初始化配置
 struct

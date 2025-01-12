@@ -85,9 +85,16 @@ _start_32:
 	orl $(1 << 31), %eax
 	mov %eax, %cr0
 
-	sti			// 开中断
+	//sti			// 开中断 改为直接操作EFLAGS寄存器
+	//jmp .		// 原地跳转 改为通过中断进行跳转
 
-	jmp .
+	// 利用中断跳转到task_0运行 手动模拟发生中断时压栈的操作
+	push $APP_DATA_SEG		// 压入SS寄存器 指向应用数据段
+	push $task0_dpl3_stack + 1024 * 4	// 压入ESP寄存器 指向应用栈底
+	push $0			// $0x202 // 暂时关闭中断	// 压入EFLAGS寄存器 IF(Interrupt Enable Flag)位置1 开中断
+	push $APP_CODE_SEG		// 压入CS寄存器	指向应用代码段
+	push $task_0_entry		// 压入EIP寄存器 指向中断返回后程序执行指令的地址
+	iret					// 中断返回
 
 // 时钟中断处理函数
 timer_int:
@@ -100,6 +107,18 @@ timer_int:
 	popa				// 中断处理后恢复现场 将寄存器值弹出
 	pop %ds				// 根据栈的数据结构 先进后出 后进先出
 	iret				// 中断返回
+
+
+// 进程0入口函数
+task_0_entry:
+	// 切换到低特权级 重新设置段寄存器和栈空间
+	// mov $APP_DATA_SEG, %ax
+	mov %ss, %ax
+	mov %ax, %ds
+	mov %ax, %es
+	mov %ax, %gs
+	mov %ax, %fs
+	jmp .			// 暂时定为原地跳转
 
 
 // 配置全局描述表寄存器(GDTR)
