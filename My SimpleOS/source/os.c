@@ -12,8 +12,9 @@ typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 
-#define MAP_ADDR 0x80000000
+#define MAP_ADDR 0x80000000         // 打开分页机制要映射的地址
 
+// 系统页表：将0x0-4MB虚拟地址映射到0-4MB的物理地址，做恒等映射
 #define PDE_P (1 << 0)
 #define PDE_W (1 << 1)
 #define PDE_U (1 << 2)
@@ -38,16 +39,16 @@ struct
     uint16_t limit_l, base_l, base_m_attr, base_h_limit_h;
 } gdt_table[256] __attribute__((aligned(8))) = {
     // 内核代码（CODE）段配置：基地址（Base Address）全0，粒度（G granularity）设置为4KB，段界限（Segment Limit）全1 4KB * 2^20 = 4GB地址空间
-    // D/B（Default operation size）为32位段(32-bit segment)，Segment present，the most privileged level，code or data，Execute/Read
+    // D/B（Default operation size）为32位段(32-bit segment)，Segment present，the most privileged level DPL=0，code or data，Execute/Read
     [KERNEL_CODE_SEG / 8] = {0xFFFF, 0x0000, 0x9A00, 0x00CF},
     // 内核数据（DATA）段配置：基地址（Base Address）全0，粒度（G granularity）设置为4KB，段界限（Segment Limit）全1 4KB * 2^20 = 4GB地址空间
-    // D/B（Default operation size）为32位段(32-bit segment)，Segment present，the most privileged level，code or data，Read/Write
+    // D/B（Default operation size）为32位段(32-bit segment)，Segment present，the most privileged level DPL=0，code or data，Read/Write
     [KERNEL_DATA_SEG / 8] = {0xFFFF, 0x0000, 0x9200, 0x00CF},
     // 应用代码（CODE）段配置：基地址（Base Address）全0，粒度（G granularity）设置为4KB，段界限（Segment Limit）全1 4KB * 2^20 = 4GB地址空间
-    // D/B（Default operation size）为32位段(32-bit segment)，Segment present，3 privilege level，code or data，Execute/Read
+    // D/B（Default operation size）为32位段(32-bit segment)，Segment present，3 privilege level DPL=3，code or data，Execute/Read
     [APP_CODE_SEG / 8] = {0xFFFF, 0x0000, 0xFA00, 0x00CF},
     // 内核数据（DATA）段配置：基地址（Base Address）全0，粒度（G granularity）设置为4KB，段界限（Segment Limit）全1 4KB * 2^20 = 4GB地址空间
-    // D/B（Default operation size）为32位段(32-bit segment)，Segment present，3 privilege level，code or data，Read/Write, accessed
+    // D/B（Default operation size）为32位段(32-bit segment)，Segment present，3 privilege level DPL=3，code or data，Read/Write, accessed
     [APP_DATA_SEG / 8] = {0xFFFF, 0x0000, 0xF300, 0x00CF},
 };
 
@@ -72,21 +73,21 @@ void timer_int(void);
 
 void os_init(void)
 {
-    // 初始化8259芯片配置
-    outb(0x11, 0x20);   // 8259主片
-    outb(0x11, 0xA0);   // 8259从片
-    outb(0x20, 0x21);   // 配置主片中断向量起始序号为0x20
-    outb(0x28, 0xA1);   // 配置从片中断向量起始序号为0x28
-    outb(1 << 2, 0x21); // 告诉主片，他的IRQ2端口上级联从片
-    outb(2, 0xAA1);     // 告诉从片，他的IRQ2端口连到了主片上
-    outb(0x1, 0x21);    // 告诉主片是与8086处理器连接，工作在非缓冲模式
-    outb(0x1, 0xA1);    // 告诉从片是与8086处理器连接，工作在非缓冲模式
+    // 初始化8259中断控制器，打开定时器中断
+    outb(0x11, 0x20);   // 初始化8259主片
+    outb(0x11, 0xA0);   // 初始化8259从片
+    outb(0x20, 0x21);   // 写ICW2，配置主片中断向量起始序号为0x20
+    outb(0x28, 0xA1);   // 写ICW2，配置从片中断向量起始序号为0x28
+    outb(1 << 2, 0x21); // 写ICW3，告诉主片，他的IRQ2端口上级联从片
+    outb(2, 0xAA1);     // 写ICW3，告诉从片，他的IRQ2端口连到了主片上
+    outb(0x1, 0x21);    // 写ICW4，告诉主片是与8086处理器连接，普通EOI，工作在非缓冲模式
+    outb(0x1, 0xA1);    // 写ICW4，告诉从片是与8086处理器连接，普通EOI，工作在非缓冲模式
     outb(0xFE, 0x21);   // 配置主片端口使能，只打开IRQ0，其余中断屏蔽
-    outb(0xFF, 0xA1);   // 配置从片端口使能，全部中断屏蔽
+    outb(0xFF, 0xA1);   // 配置从片端口使能，屏蔽全部中断
 
     // 初始化8253定时器，每100ms产生一次时钟中断
-    int tmo = 1193180 / 100;  // 计算时钟脉冲次数
-    outb(0x36, 0x43);         // 选择定时器通道0，工作在模式3，周期性产生中断
+    int tmo = 1193180 / 100;  // 计算时钟脉冲次数，时钟频率为1193180
+    outb(0x36, 0x43);         // 选择定时器通道0，工作在模式3，二进制计数，周期性产生中断
     outb((uint8_t)tmo, 0x40); // 写入低八位到定时器
     outb(tmo >> 8, 0x40);     // 写入高八位到定时器
 
@@ -96,6 +97,7 @@ void os_init(void)
     idt_table[0x20].selector = KERNEL_CODE_SEG;              // 配置选择子为内核代码段
     idt_table[0x20].attr = 0x8E00;                           // 采用中断门（Interrupt Gate）配置 1000 1110
 
+    // 0x80000000开始的4MB区域的映射
     // 将虚拟地址0x80000000映射到map_phy_buffer所在地址空间
     // 配置页目录表的MAP_ADDR的高十位表项指向已经初始化的页表page_table
     pg_dir[MAP_ADDR >> 22] = (uint32_t)page_table | PDE_P | PDE_W | PDE_U;
