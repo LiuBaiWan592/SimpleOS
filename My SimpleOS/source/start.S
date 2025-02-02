@@ -123,8 +123,22 @@ timer_int:
 	iret				// 中断返回
 
 syscall_handler:
+	push %ds			// 中断处理前保护现场 将寄存器值压栈
+	pusha				// Push AX, CX, DX, BX, original SP, BP, SI, and DI.
+
+	// 使用内核的数据段寄存器，因为要访问内核的数据
+	mov $KERNEL_DATA_SEG, %ax
+	mov %ax, %ds
+
+	mov %esp, %ebp		// 下面压栈时 esp会不断变化 所以使用ebp作为基址
+	push 13*4(%ebp)		// 提取出原压入的各项参数 再按相同的顺序压入一遍
+	push 12*4(%ebp)
+	push 11*4(%ebp)
 	call do_syscall
-	ret
+	add $(3*4), %esp
+	popa				// 中断处理后恢复现场 将寄存器值弹出
+	pop %ds				// 根据栈的数据结构 先进后出 后进先出
+	retf $(3*4)
 
 // 进程0入口函数
 task_0_entry:

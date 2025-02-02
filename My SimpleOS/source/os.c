@@ -34,8 +34,12 @@ void do_syscall(int func, char *str, char color){
 
 void sys_show(char *str, char color){
     // 远跳转
-    uint32_t addr[] = {0, SYSCALL_SEG};    // 偏移，段选择子
-    __asm__ __volatile__("lcalll *(%[a])"::[a]"r"(addr));
+    uint32_t sys_gate_addr[] = {0, SYSCALL_SEG};    // 偏移，段选择子
+    // 采用调用门, 这里只支持5个参数
+    // 用调用门的好处是会自动将参数复制到内核栈中，这样内核代码很好取参数
+    // 而如果采用寄存器传递，取参比较困难，需要先压栈再取
+    __asm__ __volatile__("push %[color];push %[str];push %[id];lcalll *(%[gate])"
+            ::[color]"m"(color), [str]"m"(str), [id]"r"(2), [gate]"r"(sys_gate_addr));
 }
 
 // task_0功能函数
@@ -99,7 +103,7 @@ struct
     // TSS(Task-State Segment)配置：
     [TASK0_TSS_SEG / 8] = {0x0068, 0x0000, 0xe900, 0x0000},
     [TASK1_TSS_SEG / 8] = {0x0068, 0x0000, 0xe900, 0x0000},
-    // 系统调用门配置
+    // 系统调用门配置：设置系统调用函数参数个数为3
     [SYSCALL_SEG / 8] = {0x0000, KERNEL_CODE_SEG, 0xec03, 0x0000},
 };
 
