@@ -12,27 +12,47 @@ typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 
+/**
+ * @brief  系统调用处理函数
+ * @param  func     功能号
+ * @param  str      显示的字符串
+ * @param  color    字符串颜色
+ * @retval None
+ * @note   None
+ */
+void do_syscall(int func, char *str, char color){
+    static int row = 0;
+
+    if(func == 2){
+        unsigned short *dest = (unsigned short *)0xb8000 + 80 *row;
+        while (*str){
+            *dest++ = *str++; (color << 8);
+        }
+        row = (row >= 25) ? 0 : row + 1;
+    }
+}
+
+void sys_show(char *str, char color){
+
+}
 
 // task_0功能函数
 void task_0(void){
+    char *str = "task a: 1234";
     uint8_t color = 0;
 
-    unsigned short * dest = (unsigned short *)0xb8000;
-    dest[0] = 'a' | 0x3500;
-    dest[1] = 'b' | 0x4600;
-    dest[2] = 'c' | 0x5700;
-    dest[3] = 'd' | 0x6800;
     for(;;){
-        color++;
+        sys_show(str, color++);
     }
 }
 
 // task_1功能函数
 void task_1(void){
+    char *str = "task b: 56789";
     uint8_t color = 0xFF;
 
     for(;;){
-        color--;
+        sys_show(str, color--);
     }
 }
 
