@@ -17,6 +17,11 @@ typedef unsigned int uint32_t;
 void task_0(void){
     uint8_t color = 0;
 
+    unsigned short * dest = (unsigned short *)0xb8000;
+    dest[0] = 'a' | 0x3500;
+    dest[1] = 'b' | 0x4600;
+    dest[2] = 'c' | 0x5700;
+    dest[3] = 'd' | 0x6800;
     for(;;){
         color++;
     }
