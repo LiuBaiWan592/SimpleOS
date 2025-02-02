@@ -125,6 +125,9 @@ void task_sched(void){
 // 时钟中断处理函数声明
 void timer_int(void);
 
+// 系统调用处理函数声明
+void syscall_handler(void);
+
 void os_init(void)
 {
     // 初始化8259中断控制器，打开定时器中断

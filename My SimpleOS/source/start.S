@@ -9,7 +9,7 @@
 	#include "os.h"
 
 	// 声明本地以下符号是全局的，在其它源文件中可以访问
-	.global _start, timer_int
+	.global _start, timer_int, syscall_handler
 
 	// 声明外部外部定义
 	.extern os_init
@@ -122,6 +122,8 @@ timer_int:
 	pop %ds				// 根据栈的数据结构 先进后出 后进先出
 	iret				// 中断返回
 
+syscall_handler:
+	ret
 
 // 进程0入口函数
 task_0_entry:
