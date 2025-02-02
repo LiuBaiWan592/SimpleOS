@@ -100,7 +100,7 @@ _start_32:
 	// 中断发生时 会自动压入原SS, ESP, EFLAGS, CS, EIP到栈中 手动模拟发生中断时压栈的操作
 	push $APP_DATA_SEG		// 压入SS寄存器 指向应用数据段
 	push $task0_dpl3_stack + 1024 * 4	// 压入ESP寄存器 指向应用栈底
-	push $0			// $0x202 // 暂时关闭中断	// 压入EFLAGS寄存器 IF(Interrupt Enable Flag)位置1 开中断
+	push $0x202 			// 压入EFLAGS寄存器 IF(Interrupt Enable Flag)位置1 开中断
 	push $APP_CODE_SEG		// 压入CS寄存器	指向应用代码段
 	push $task_0_entry		// 压入EIP寄存器 指向中断返回后程序执行指令的地址
 	iret					// 中断返回 切换至任务0(task_0)
@@ -112,6 +112,11 @@ timer_int:
 
 	mov $0x20, %al		// 向主片发送0x20表示中断处理完成
 	outb %al, $0x20		// 发送EOI outb %al, %dx
+
+	// 使用内核的数据段寄存器，因为要访问内核的数据
+	mov $KERNEL_DATA_SEG, %ax
+	mov %ax, %ds
+	call task_sched		// 在dpl0中进行任务切换
 
 	popa				// 中断处理后恢复现场 将寄存器值弹出
 	pop %ds				// 根据栈的数据结构 先进后出 后进先出
