@@ -92,6 +92,10 @@ _start_32:
 	//sti			// 开中断 改为直接操作EFLAGS寄存器
 	//jmp .		// 原地跳转 改为通过中断进行跳转
 
+	// 配置TR寄存器 指向当前运行的任务的Task-State Segment
+	mov $TASK0_TSS_SEG, %ax
+	ltr %ax
+
 	// 模拟中断返回 利用中断跳转到task_0运行 从而实现从特权级0到特权级3的变化
 	// 中断发生时 会自动压入原SS, ESP, EFLAGS, CS, EIP到栈中 手动模拟发生中断时压栈的操作
 	push $APP_DATA_SEG		// 压入SS寄存器 指向应用数据段
@@ -123,7 +127,7 @@ task_0_entry:
 	mov %ax, %es
 	mov %ax, %gs
 	mov %ax, %fs
-	jmp .			// 暂时定为原地跳转
+	jmp task_0			// 跳转到c语言task_0进程中运行
 
 
 // 配置全局描述表寄存器(GDTR)

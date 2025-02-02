@@ -12,6 +12,25 @@ typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 
+
+// task_0功能函数
+void task_0(void){
+    uint8_t color = 0;
+
+    for(;;){
+        color++;
+    }
+}
+
+// task_1功能函数
+void task_1(void){
+    uint8_t color = 0xFF;
+
+    for(;;){
+        color--;
+    }
+}
+
 #define MAP_ADDR 0x80000000         // 打开分页机制要映射的地址
 
 // 系统页表：将0x0-4MB虚拟地址映射到0-4MB的物理地址，做恒等映射
@@ -50,10 +69,33 @@ struct
     // 内核数据（DATA）段配置：基地址（Base Address）全0，粒度（G granularity）设置为4KB，段界限（Segment Limit）全1 4KB * 2^20 = 4GB地址空间
     // D/B（Default operation size）为32位段(32-bit segment)，Segment present，3 privilege level DPL=3，code or data，Read/Write, accessed
     [APP_DATA_SEG / 8] = {0xFFFF, 0x0000, 0xF300, 0x00CF},
+    // TSS(Task-State Segment)配置：
+    [TASK0_TSS_SEG /8] = {0x0068, 0x0000, 0xe900, 0x0000},
+    [TASK1_TSS_SEG /8] = {0x0068, 0x0000, 0xe900, 0x0000},
 };
 
 // task0的栈空间
-uint32_t task0_dpl3_stack[1024];
+uint32_t task0_dpl0_stack[1024], task0_dpl3_stack[1024], task1_dpl0_stack[1024], task1_dpl3_stack[1024];
+
+// TSS(Task-State Segment)，用于实现中断时上下文切换
+uint32_t task0_tss[] = {
+    // prelink, esp0, ss0, esp1, ss1, esp2, ss2
+    0,  (uint32_t)task0_dpl0_stack + 4*1024, KERNEL_DATA_SEG , /* 后边不用使用 */ 0x0, 0x0, 0x0, 0x0,
+    // cr3, eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi,
+    (uint32_t)pg_dir,  (uint32_t)task_0/*入口地址*/, 0x202, 0xa, 0xc, 0xd, 0xb, (uint32_t)task0_dpl3_stack + 4*1024/* 栈 */, 0x1, 0x2, 0x3,
+    // es, cs, ss, ds, fs, gs, ldt, iomap
+    APP_DATA_SEG, APP_CODE_SEG, APP_DATA_SEG, APP_DATA_SEG, APP_DATA_SEG, APP_DATA_SEG, 0x0, 0x0,
+};
+
+uint32_t task1_tss[] = {
+    // prelink, esp0, ss0, esp1, ss1, esp2, ss2
+    0,  (uint32_t)task1_dpl0_stack + 4*1024, KERNEL_DATA_SEG , /* 后边不用使用 */ 0x0, 0x0, 0x0, 0x0,
+    // cr3, eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi,
+    (uint32_t)pg_dir,  (uint32_t)task_1/*入口地址*/, 0x202, 0xa, 0xc, 0xd, 0xb, (uint32_t)task1_dpl3_stack + 4*1024/* 栈 */, 0x1, 0x2, 0x3,
+    // es, cs, ss, ds, fs, gs, ldt, iomap
+    APP_DATA_SEG, APP_CODE_SEG, APP_DATA_SEG, APP_DATA_SEG, APP_DATA_SEG, APP_DATA_SEG, 0x0, 0x0,
+};
+
 
 // 中断描述表（IDT）初始化配置
 struct
@@ -96,6 +138,10 @@ void os_init(void)
     idt_table[0x20].offset_h = (uint32_t)timer_int >> 16;    // 配置高16位的偏移
     idt_table[0x20].selector = KERNEL_CODE_SEG;              // 配置选择子为内核代码段
     idt_table[0x20].attr = 0x8E00;                           // 采用中断门（Interrupt Gate）配置 1000 1110
+
+    // 配置TSS(Task-State Segment)的起始地址
+    gdt_table[TASK0_TSS_SEG/ 8].base_l = (uint16_t)(uint32_t)task0_tss;
+    gdt_table[TASK1_TSS_SEG/ 8].base_l = (uint16_t)(uint32_t)task1_tss;
 
     // 0x80000000开始的4MB区域的映射
     // 将虚拟地址0x80000000映射到map_phy_buffer所在地址空间
