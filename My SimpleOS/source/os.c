@@ -110,6 +110,16 @@ void outb(uint8_t data, uint16_t port)
     __asm__ __volatile__("outb %[v], %[p]" ::[p] "d"(port), [v] "a"(data));
 }
 
+// 任务调度函数，实现两个任务之间进行切换
+void task_sched(void){
+    static int task_tss = TASK0_TSS_SEG;    // 初始化为刚开始运行Task0
+
+    task_tss = (task_tss == TASK0_TSS_SEG) ? TASK1_TSS_SEG : TASK0_TSS_SEG;     // 切换任务
+    // 远跳转
+    uint32_t addr[] = {0, task_tss};    // 偏移，段选择子
+    __asm__ __volatile__("ljmp *(%[a])"::[a]"r"(addr));
+}
+
 // 时钟中断处理函数声明
 void timer_int(void);
 
