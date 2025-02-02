@@ -21,16 +21,24 @@ typedef unsigned int uint32_t;
  * @note   None
  */
 void do_syscall(int func, char *str, char color){
-    static int row = 0;
+    static int row = 1;     // 初始值不能为0，否则其初始化值不确定
 
     if(func == 2){
-        unsigned short *dest = (unsigned short *)0xb8000 + 80 *row;
-        while (*str){
-            *dest++ = *str++; (color << 8);
+        // 显示器共80列，25行，按字符显示，每个字符需要用两个字节表示
+        unsigned short *dest = (unsigned short *)0xb8000 + 80 * row;
+        while (*str) {
+            // 其中一个字节保存要显示的字符，另一个字节表示颜色
+            *dest++ = *str++ | (color << 8);
         }
+
+        // 逐行显示，超过一行则回到第0行再显示
         row = (row >= 25) ? 0 : row + 1;
+
+        // 延时,减缓闪动频率
+        for (int i = 0; i < 0xFFFFFF; i++);
     }
 }
+
 
 void sys_show(char *str, char color){
     // 远跳转
