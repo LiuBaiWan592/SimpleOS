@@ -70,8 +70,10 @@ struct
     // D/B（Default operation size）为32位段(32-bit segment)，Segment present，3 privilege level DPL=3，code or data，Read/Write, accessed
     [APP_DATA_SEG / 8] = {0xFFFF, 0x0000, 0xF300, 0x00CF},
     // TSS(Task-State Segment)配置：
-    [TASK0_TSS_SEG /8] = {0x0068, 0x0000, 0xe900, 0x0000},
-    [TASK1_TSS_SEG /8] = {0x0068, 0x0000, 0xe900, 0x0000},
+    [TASK0_TSS_SEG / 8] = {0x0068, 0x0000, 0xe900, 0x0000},
+    [TASK1_TSS_SEG / 8] = {0x0068, 0x0000, 0xe900, 0x0000},
+    // 系统调用门配置
+    [SYSCALL_SEG / 8] = {0x0000, KERNEL_CODE_SEG, 0xec03, 0x0000},
 };
 
 // task0的栈空间
@@ -150,8 +152,11 @@ void os_init(void)
     idt_table[0x20].attr = 0x8E00;                           // 采用中断门（Interrupt Gate）配置 1000 1110
 
     // 配置TSS(Task-State Segment)的起始地址
-    gdt_table[TASK0_TSS_SEG/ 8].base_l = (uint16_t)(uint32_t)task0_tss;
-    gdt_table[TASK1_TSS_SEG/ 8].base_l = (uint16_t)(uint32_t)task1_tss;
+    gdt_table[TASK0_TSS_SEG / 8].base_l = (uint16_t)(uint32_t)task0_tss;
+    gdt_table[TASK1_TSS_SEG / 8].base_l = (uint16_t)(uint32_t)task1_tss;
+
+    // 配置系统调用门的 Offset in Segment 字段为系统调用处理函数
+    gdt_table[SYSCALL_SEG / 8].limit_l = (uint16_t)(uint32_t)syscall_handler;
 
     // 0x80000000开始的4MB区域的映射
     // 将虚拟地址0x80000000映射到map_phy_buffer所在地址空间

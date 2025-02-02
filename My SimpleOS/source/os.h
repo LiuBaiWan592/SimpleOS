@@ -15,5 +15,6 @@
 #define APP_DATA_SEG        ((4 * 8) | 3)   // Segment Selector For Data Segment RPL 为3
 #define TASK0_TSS_SEG       ((5 * 8))       // Task-State Segment of Task_0
 #define TASK1_TSS_SEG       ((6 * 8))       // Task-State Segment of Task_1
+#define SYSCALL_SEG         ((7 * 8))       // 系统调用门
 
 #endif // OS_H
