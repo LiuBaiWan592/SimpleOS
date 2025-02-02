@@ -123,6 +123,7 @@ timer_int:
 	iret				// 中断返回
 
 syscall_handler:
+	call do_syscall
 	ret
 
 // 进程0入口函数

@@ -33,7 +33,9 @@ void do_syscall(int func, char *str, char color){
 }
 
 void sys_show(char *str, char color){
-
+    // 远跳转
+    uint32_t addr[] = {0, SYSCALL_SEG};    // 偏移，段选择子
+    __asm__ __volatile__("lcalll *(%[a])"::[a]"r"(addr));
 }
 
 // task_0功能函数
