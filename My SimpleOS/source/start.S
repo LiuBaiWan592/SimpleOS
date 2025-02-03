@@ -96,12 +96,15 @@ _start_32:
 	mov $TASK0_TSS_SEG, %ax
 	ltr %ax
 
+	mov $TASK0_LDT_SEG, %ax
+	lldt %ax			// 加载任务局部描述表(IDT)
+
 	// 模拟中断返回 利用中断跳转到task_0运行 从而实现从特权级0到特权级3的变化
 	// 中断发生时 会自动压入原SS, ESP, EFLAGS, CS, EIP到栈中 手动模拟发生中断时压栈的操作
-	push $APP_DATA_SEG		// 压入SS寄存器 指向应用数据段
+	push $TASK_DATA_SEG		// 压入SS寄存器 指向应用数据段
 	push $task0_dpl3_stack + 1024 * 4	// 压入ESP寄存器 指向应用栈底
 	push $0x202 			// 压入EFLAGS寄存器 IF(Interrupt Enable Flag)位置1 开中断
-	push $APP_CODE_SEG		// 压入CS寄存器	指向应用代码段
+	push $TASK_CODE_SEG		// 压入CS寄存器	指向应用代码段
 	push $task_0_entry		// 压入EIP寄存器 指向中断返回后程序执行指令的地址
 	iret					// 中断返回 切换至任务0(task_0)
 

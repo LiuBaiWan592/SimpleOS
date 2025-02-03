@@ -19,7 +19,7 @@
 #define TASK0_LDT_SEG       ((8 * 8))       // Task0 LDT 段选择子
 #define TASK1_LDT_SEG       ((9 * 8))       // Task1 LDT 段选择子
 
-#define TASK_CODE_SEG       (0 * 8)         // LDT 任务代码段
-#define TASK_DATA_SEG       (1 * 8)         // LDT 任务数据段
+#define TASK_CODE_SEG       ((0 * 8) | 0x4 | 3)     // LDT 任务代码段
+#define TASK_DATA_SEG       ((1 * 8) | 0x4 | 3)     // LDT 任务数据段
 
 #endif // OS_H

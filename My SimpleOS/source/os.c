@@ -91,6 +91,24 @@ uint32_t pg_dir[1024] __attribute__((aligned(4096))) = {
     [0] = (0) | PDE_P | PDE_W | PDE_U | PDE_PS,
 };
 
+//  task0 LDT(Local Descriptor Table)局部描述表配置
+struct
+{
+    uint16_t limit_l, base_l, base_m_attr, base_h_limit_h;
+} task0_ldt_table[256] __attribute__((aligned(8))) = {
+    [TASK_CODE_SEG / 8] = {0xFFFF, 0x0000, 0xFA00, 0x00CF},
+    [TASK_DATA_SEG / 8] = {0xFFFF, 0x0000, 0xF300, 0x00CF},
+};
+
+//  task1 LDT(Local Descriptor Table)局部描述表配置
+struct
+{
+    uint16_t limit_l, base_l, base_m_attr, base_h_limit_h;
+} task1_ldt_table[256] __attribute__((aligned(8))) = {
+    [TASK_CODE_SEG / 8] = {0xFFFF, 0x0000, 0xFA00, 0x00CF},
+    [TASK_DATA_SEG / 8] = {0xFFFF, 0x0000, 0xF300, 0x00CF},
+};
+
 // 全局描述表（GDT）初始化配置
 struct
 {
@@ -118,24 +136,6 @@ struct
     [TASK1_LDT_SEG / 8] = {sizeof(task1_ldt_table) - 1, 0x0000, 0xE200, 0x00CF},
 };
 
-//  task0 LDT(Local Descriptor Table)局部描述表配置
-struct
-{
-    uint16_t limit_l, base_l, base_m_attr, base_h_limit_h;
-} task0_ldt_table[256] __attribute__((aligned(8))) = {
-    [TASK_CODE_SEG / 8] = {0xFFFF, 0x0000, 0xFA00, 0x00CF},
-    [TASK_DATA_SEG / 8] = {0xFFFF, 0x0000, 0xF300, 0x00CF},
-};
-
-//  task1 LDT(Local Descriptor Table)局部描述表配置
-struct
-{
-    uint16_t limit_l, base_l, base_m_attr, base_h_limit_h;
-} task1_ldt_table[256] __attribute__((aligned(8))) = {
-    [TASK_CODE_SEG / 8] = {0xFFFF, 0x0000, 0xFA00, 0x00CF},
-    [TASK_DATA_SEG / 8] = {0xFFFF, 0x0000, 0xF300, 0x00CF},
-};
-
 // task0的栈空间
 uint32_t task0_dpl0_stack[1024], task0_dpl3_stack[1024], task1_dpl0_stack[1024], task1_dpl3_stack[1024];
 
@@ -146,7 +146,7 @@ uint32_t task0_tss[] = {
     // cr3, eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi,
     (uint32_t)pg_dir,  (uint32_t)task_0/*入口地址*/, 0x202, 0xa, 0xc, 0xd, 0xb, (uint32_t)task0_dpl3_stack + 4*1024/* 栈 */, 0x1, 0x2, 0x3,
     // es, cs, ss, ds, fs, gs, ldt, iomap
-    APP_DATA_SEG, APP_CODE_SEG, APP_DATA_SEG, APP_DATA_SEG, APP_DATA_SEG, APP_DATA_SEG, 0x0, 0x0,
+    TASK_DATA_SEG, TASK_CODE_SEG, TASK_DATA_SEG, TASK_DATA_SEG, TASK_DATA_SEG, TASK_DATA_SEG, TASK0_LDT_SEG, 0x0,
 };
 
 uint32_t task1_tss[] = {
@@ -155,7 +155,7 @@ uint32_t task1_tss[] = {
     // cr3, eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi,
     (uint32_t)pg_dir,  (uint32_t)task_1/*入口地址*/, 0x202, 0xa, 0xc, 0xd, 0xb, (uint32_t)task1_dpl3_stack + 4*1024/* 栈 */, 0x1, 0x2, 0x3,
     // es, cs, ss, ds, fs, gs, ldt, iomap
-    APP_DATA_SEG, APP_CODE_SEG, APP_DATA_SEG, APP_DATA_SEG, APP_DATA_SEG, APP_DATA_SEG, 0x0, 0x0,
+    TASK_DATA_SEG, TASK_CODE_SEG, TASK_DATA_SEG, TASK_DATA_SEG, TASK_DATA_SEG, TASK_DATA_SEG, TASK1_LDT_SEG, 0x0,
 };
 
 
