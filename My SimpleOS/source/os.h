@@ -16,5 +16,10 @@
 #define TASK0_TSS_SEG       ((5 * 8))       // Task-State Segment of Task_0
 #define TASK1_TSS_SEG       ((6 * 8))       // Task-State Segment of Task_1
 #define SYSCALL_SEG         ((7 * 8))       // 系统调用门
+#define TASK0_LDT_SEG       ((8 * 8))       // Task0 LDT 段选择子
+#define TASK1_LDT_SEG       ((9 * 8))       // Task1 LDT 段选择子
+
+#define TASK_CODE_SEG       (0 * 8)         // LDT 任务代码段
+#define TASK_DATA_SEG       (1 * 8)         // LDT 任务数据段
 
 #endif // OS_H

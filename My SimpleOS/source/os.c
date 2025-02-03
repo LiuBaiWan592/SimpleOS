@@ -108,11 +108,32 @@ struct
     // 内核数据（DATA）段配置：基地址（Base Address）全0，粒度（G granularity）设置为4KB，段界限（Segment Limit）全1 4KB * 2^20 = 4GB地址空间
     // D/B（Default operation size）为32位段(32-bit segment)，Segment present，3 privilege level DPL=3，code or data，Read/Write, accessed
     [APP_DATA_SEG / 8] = {0xFFFF, 0x0000, 0xF300, 0x00CF},
-    // TSS(Task-State Segment)配置：
-    [TASK0_TSS_SEG / 8] = {0x0068, 0x0000, 0xe900, 0x0000},
-    [TASK1_TSS_SEG / 8] = {0x0068, 0x0000, 0xe900, 0x0000},
-    // 系统调用门配置：设置系统调用函数参数个数为3
-    [SYSCALL_SEG / 8] = {0x0000, KERNEL_CODE_SEG, 0xec03, 0x0000},
+    // TSS(Task-State Segment)段配置：
+    [TASK0_TSS_SEG / 8] = {0x0068, 0x0000, 0xE900, 0x0000},
+    [TASK1_TSS_SEG / 8] = {0x0068, 0x0000, 0xE900, 0x0000},
+    // 系统调用门段配置：设置系统调用函数参数个数为3
+    [SYSCALL_SEG / 8] = {0x0000, KERNEL_CODE_SEG, 0xEC03, 0x0000},
+    // LDT(Local Descriptor Table)局部描述表段配置
+    [TASK0_LDT_SEG / 8] = {sizeof(task0_ldt_table) - 1, 0x0000, 0xE200, 0x00CF},
+    [TASK1_LDT_SEG / 8] = {sizeof(task1_ldt_table) - 1, 0x0000, 0xE200, 0x00CF},
+};
+
+//  task0 LDT(Local Descriptor Table)局部描述表配置
+struct
+{
+    uint16_t limit_l, base_l, base_m_attr, base_h_limit_h;
+} task0_ldt_table[256] __attribute__((aligned(8))) = {
+    [TASK_CODE_SEG / 8] = {0xFFFF, 0x0000, 0xFA00, 0x00CF},
+    [TASK_DATA_SEG / 8] = {0xFFFF, 0x0000, 0xF300, 0x00CF},
+};
+
+//  task1 LDT(Local Descriptor Table)局部描述表配置
+struct
+{
+    uint16_t limit_l, base_l, base_m_attr, base_h_limit_h;
+} task1_ldt_table[256] __attribute__((aligned(8))) = {
+    [TASK_CODE_SEG / 8] = {0xFFFF, 0x0000, 0xFA00, 0x00CF},
+    [TASK_DATA_SEG / 8] = {0xFFFF, 0x0000, 0xF300, 0x00CF},
 };
 
 // task0的栈空间
@@ -199,6 +220,10 @@ void os_init(void)
 
     // 配置系统调用门的 Offset in Segment 字段为系统调用处理函数
     gdt_table[SYSCALL_SEG / 8].limit_l = (uint16_t)(uint32_t)syscall_handler;
+
+    // 配置LDT(Local Descriptor Table)的起始地址
+    gdt_table[TASK0_LDT_SEG / 8].base_l = (uint32_t)task0_ldt_table;
+    gdt_table[TASK1_LDT_SEG / 8].base_l = (uint32_t)task1_ldt_table;
 
     // 0x80000000开始的4MB区域的映射
     // 将虚拟地址0x80000000映射到map_phy_buffer所在地址空间
