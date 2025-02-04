@@ -8,6 +8,7 @@
  */
 #include "os.h"
 
+// 类型定义
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
@@ -39,7 +40,17 @@ void do_syscall(int func, char *str, char color){
     }
 }
 
-
+/**
+ * @brief  系统调用，在屏幕上显示字符串
+ * @param  str      显示的字符串
+ * @param  color    字符串颜色
+ * @retval None
+ * @note   None
+ */
+static void function(void)
+{
+    
+}
 void sys_show(char *str, char color){
     // 远跳转
     uint32_t sys_gate_addr[] = {0, SYSCALL_SEG};    // 偏移，段选择子
