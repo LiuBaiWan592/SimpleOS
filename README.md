@@ -11,10 +11,11 @@
 3. 整体结构框图：项目整体结构图，但是中间实现过程与整体框图略有差异。
 4. diy-simpleos-200lines：原项目[源码](https://github.com/lishutong1024/diy-200lines-os)。
 
-## 编译工具链配置（Environment）
+## Windows系统下编译工具链配置（Environment）
 
 1. cmake-3.29.1-windows-x86_64.zip
 2. x86_64-elf-tools-windows13.2.0.zip
-3. qemu-w32-setup-20170113.exe
+3. [qemu-w32-setup-20170113.exe](https://qemu.weilnetz.de/w64/2017/qemu-w64-setup-20170113.exe)
 4. git的dd工具
 5. MinGW-W64 GCCx86_64-8.1.0-release-win32-seh-rt_v6-rev0的mingw32-make.exe工具重命名为make.exe
+
